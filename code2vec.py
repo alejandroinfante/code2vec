@@ -1,6 +1,6 @@
 from common import Config, VocabType
 from argparse import ArgumentParser
-from interactive_predict import InteractivePredictor
+from interactive_pharo_predict import InteractivePredictor
 from model import Model
 import sys
 

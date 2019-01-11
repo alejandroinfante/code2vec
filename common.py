@@ -13,20 +13,22 @@ class Config:
         config.BATCH_SIZE = 1024
         config.TEST_BATCH_SIZE = config.BATCH_SIZE
         config.READING_BATCH_SIZE = 1300 * 4
+        config.NUM_EXAMPLES = 1
         config.NUM_BATCHING_THREADS = 2
         config.BATCH_QUEUE_SIZE = 300000
-        config.MAX_CONTEXTS = 200
-        config.WORDS_VOCAB_SIZE = 1301136
-        config.TARGET_VOCAB_SIZE = 261245
-        config.PATHS_VOCAB_SIZE = 911417
-        config.EMBEDDINGS_SIZE = 128
-        config.MAX_TO_KEEP = 10
+        config.MAX_CONTEXTS = 100
+        config.WORDS_VOCAB_SIZE = 15000
+        config.TARGET_VOCAB_SIZE = 10000
+        config.PATHS_VOCAB_SIZE = 20000
+        config.EMBEDDINGS_SIZE = 75
+        config.MAX_TO_KEEP = 20
         # Automatically filled, do not edit:
         config.TRAIN_PATH = args.data_path
         config.TEST_PATH = args.test_path
         config.SAVE_PATH = args.save_path
         config.LOAD_PATH = args.load_path
         config.RELEASE = args.release
+        config.DROPOUT = 0.75
         return config
 
     def __init__(self):
@@ -191,6 +193,8 @@ class common:
     @staticmethod
     def filter_impossible_names(top_words):
         result = list(filter(common.legal_method_names_checker, top_words))
+        if len(result) == 0:
+            result = ['']
         return result
 
     @staticmethod

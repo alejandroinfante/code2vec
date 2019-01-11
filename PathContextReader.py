@@ -12,9 +12,9 @@ class PathContextReader:
 
     def __init__(self, word_to_index, target_word_to_index, path_to_index, config, is_evaluating=False):
         self.file_path = config.TEST_PATH if is_evaluating else (config.TRAIN_PATH + '.train.c2v')
-        self.batch_size = config.TEST_BATCH_SIZE if is_evaluating else min(config.BATCH_SIZE, config.NUM_EXAMPLES)
+        self.batch_size = min(config.TEST_BATCH_SIZE if is_evaluating else config.BATCH_SIZE, config.NUM_EXAMPLES)
         self.num_epochs = config.NUM_EPOCHS
-        self.reading_batch_size = config.READING_BATCH_SIZE if is_evaluating else min(config.READING_BATCH_SIZE, config.NUM_EXAMPLES)
+        self.reading_batch_size = min(config.READING_BATCH_SIZE, config.NUM_EXAMPLES)
         self.num_batching_threads = config.NUM_BATCHING_THREADS
         self.batch_queue_size = config.BATCH_QUEUE_SIZE
         self.data_num_contexts = config.MAX_CONTEXTS
@@ -62,7 +62,7 @@ class PathContextReader:
     def read_file(self):
         row = self.get_row_input()
         record_defaults = [[no_such_composite]] * (self.data_num_contexts + 1)
-        row_parts = tf.decode_csv(row, record_defaults=record_defaults, field_delim=' ')
+        row_parts = tf.decode_csv(row, record_defaults=record_defaults, field_delim=' ', use_quote_delim=False)
         word = row_parts[0]  # (batch, )
         contexts = tf.stack(row_parts[1:(self.max_contexts + 1)], axis=1)  # (batch, max_contexts)
 
