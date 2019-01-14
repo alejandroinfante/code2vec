@@ -1,6 +1,7 @@
 from common import Config, VocabType
 from argparse import ArgumentParser
 from interactive_pharo_predict import InteractivePredictor
+from predictor_server import PredictorServer
 from model import Model
 import sys
 
@@ -28,6 +29,7 @@ if __name__ == '__main__':
                         help='if specified and loading a trained model, release the loaded model for a lower model '
                              'size.')
     parser.add_argument('--predict', action='store_true')
+    parser.add_argument('--server_predict', dest='port')
     args = parser.parse_args()
 
     config = Config.get_default_config(args)
@@ -51,4 +53,6 @@ if __name__ == '__main__':
     if args.predict:
         predictor = InteractivePredictor(config, model)
         predictor.predict()
+    if args.port is not None:
+        PredictorServer(config,model,args.port).start()
     model.close_session()
