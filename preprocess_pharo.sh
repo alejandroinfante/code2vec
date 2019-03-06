@@ -18,16 +18,16 @@
 #   recommended to use a multi-core machine for the preprocessing 
 #   step and set this value to the number of cores.
 # PYTHON - python3 interpreter alias.
-TRAIN_DIR=pharoDataset/train
-VAL_DIR=pharoDataset/validation
-TEST_DIR=pharoDataset/testing
-DATASET_NAME=pharo_data
+TRAIN_DIR=/Volumes/TOURO/preprocess64/dataset/trainFuel
+VAL_DIR=/Volumes/TOURO/preprocess64/dataset/validationFuel
+TEST_DIR=/Volumes/TOURO/preprocess64/dataset/testFuel
+DATASET_NAME=smalltalkhub
 MAX_CONTEXTS=100
 WORD_VOCAB_SIZE=30000
 PATH_VOCAB_SIZE=20000
 TARGET_VOCAB_SIZE=5200
 PYTHON=python
-PHARO_IMAGE=PharoExtractor/Pharo.image
+PHARO_IMAGE=PharoExtractor/extractor.image
 ###########################################################
 
 TRAIN_DATA_FILE=${DATASET_NAME}.train.raw.txt

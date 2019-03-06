@@ -16,7 +16,6 @@ def get_immediate_subdirectories(a_dir):
     return [(os.path.join(a_dir, name)) for name in os.listdir(a_dir)
             if os.path.isdir(os.path.join(a_dir, name))]
 
-
 TMP_DIR = ""
 
 def ParallelExtractDir(dir):
@@ -24,11 +23,10 @@ def ParallelExtractDir(dir):
 
 
 def ExtractFeaturesForDir(args, dir, prefix):
-    pharoDir = '../' + dir
-    command = ['pharo7', '--headless', args.pharoimage, 'extractDir', pharoDir ]
+    pharoDir = dir
+    command = ['/Volumes/TOURO/preprocess64/code2vec/PharoExtractor/Pharo.app/Contents/MacOS/Pharo', '--headless', args.pharoimage, 'extractDir', pharoDir ]
+    # command = ['pharo64', '--headless', args.pharoimage, 'extractDir', pharoDir ]
 
-    # print(command)
-    # os.system(command)
     kill = lambda process: process.kill()
     outputFileName = TMP_DIR + prefix + dir.split('/')[-1]
     failed = False
