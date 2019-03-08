@@ -10,7 +10,8 @@ import sys
 from argparse import ArgumentParser
 from subprocess import Popen, PIPE, STDOUT, call
 
-
+PHARO_IMAGE = ""
+PHARO_VM = '/Volumes/TOURO/preprocess64/code2vec/PharoExtractor/Pharo.app/Contents/MacOS/Pharo'
 
 def get_immediate_subdirectories(a_dir):
     return [(os.path.join(a_dir, name)) for name in os.listdir(a_dir)
@@ -22,9 +23,9 @@ def ParallelExtractDir(dir):
     ExtractFeaturesForDir(dir, "")
 
 
-def ExtractFeaturesForDir(args, dir, prefix):
+def ExtractFeaturesForDir(dir, prefix):
     pharoDir = dir
-    command = ['/Volumes/TOURO/preprocess64/code2vec/PharoExtractor/Pharo.app/Contents/MacOS/Pharo', '--headless', args.pharoimage, 'extractDir', pharoDir ]
+    command = [PHARO_VM, '--headless', PHARO_IMAGE, 'extractDir', pharoDir ]
     # command = ['pharo64', '--headless', args.pharoimage, 'extractDir', pharoDir ]
 
     kill = lambda process: process.kill()
@@ -48,7 +49,7 @@ def ExtractFeaturesForDir(args, dir, prefix):
             failed = True
             subdirs = get_immediate_subdirectories(dir)
             for subdir in subdirs:
-                ExtractFeaturesForDir(args, subdir, prefix + dir.split('/')[-1] + '_')
+                ExtractFeaturesForDir(subdir, prefix + dir.split('/')[-1] + '_')
     if failed:
         if os.path.exists(outputFileName):
             os.remove(outputFileName)
@@ -56,15 +57,17 @@ def ExtractFeaturesForDir(args, dir, prefix):
 
 def ExtractFeaturesForDirsList(args, dirs):
     global TMP_DIR
+    global PHARO_IMAGE
     TMP_DIR = "./tmp/feature_extractor%d/" % (os.getpid())
+    PHARO_IMAGE = args.pharoimage
     if os.path.exists(TMP_DIR):
         shutil.rmtree(TMP_DIR, ignore_errors=True)
     os.makedirs(TMP_DIR)
     try:
-        # p = multiprocessing.Pool(4)
-        # p.map(ParallelExtractDir, dirs)
-        for dir in dirs:
-            ExtractFeaturesForDir(args, dir, '')
+        p = multiprocessing.Pool(4)
+        p.map(ParallelExtractDir, dirs)
+        # for dir in dirs:
+        #     ExtractFeaturesForDir(dir, '')
         output_files = os.listdir(TMP_DIR)
         for f in output_files:
             os.system("cat %s/%s" % (TMP_DIR, f))
