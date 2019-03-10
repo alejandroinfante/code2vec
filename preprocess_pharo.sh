@@ -23,9 +23,9 @@ VAL_DIR=/Volumes/TOURO/preprocess64/dataset/validationFuel
 TEST_DIR=/Volumes/TOURO/preprocess64/dataset/testFuel
 DATASET_NAME=smalltalkhub
 MAX_CONTEXTS=100
-WORD_VOCAB_SIZE=30000
-PATH_VOCAB_SIZE=20000
-TARGET_VOCAB_SIZE=5200
+WORD_VOCAB_SIZE=300000
+PATH_VOCAB_SIZE=200000
+TARGET_VOCAB_SIZE=50000
 PYTHON=python
 PHARO_IMAGE=PharoExtractor/extractor.image
 ###########################################################

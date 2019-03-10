@@ -11,7 +11,8 @@ from argparse import ArgumentParser
 from subprocess import Popen, PIPE, STDOUT, call
 
 PHARO_IMAGE = ""
-PHARO_VM = '/Volumes/TOURO/preprocess64/code2vec/PharoExtractor/Pharo.app/Contents/MacOS/Pharo'
+PHARO_VM = '/data/ainfante/code2vec/PharoExtractor/pharo64-linux-stable/bin/pharo'
+# PHARO_VM = '/Volumes/TOURO/preprocess64/code2vec/PharoExtractor/Pharo.app/Contents/MacOS/Pharo'
 
 def get_immediate_subdirectories(a_dir):
     return [(os.path.join(a_dir, name)) for name in os.listdir(a_dir)
@@ -64,7 +65,7 @@ def ExtractFeaturesForDirsList(args, dirs):
         shutil.rmtree(TMP_DIR, ignore_errors=True)
     os.makedirs(TMP_DIR)
     try:
-        p = multiprocessing.Pool(4)
+        p = multiprocessing.Pool(8)
         p.map(ParallelExtractDir, dirs)
         # for dir in dirs:
         #     ExtractFeaturesForDir(dir, '')
