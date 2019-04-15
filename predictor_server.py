@@ -1,13 +1,13 @@
 from common import common
 from pharo_extractor import Extractor
-from flask import Flask, request
+from flask import Flask, request, abort
 import threading
 import json
 import tempfile
 import werkzeug
 import os
 
-PHARO_IMAGE_PATH = 'PharoExtractor/Pharo.image'
+PHARO_IMAGE_PATH = 'PharoExtractor/extractor.image'
 MAX_PATH_LENGTH = 8
 MAX_PATH_WIDTH = 2
 SHOW_TOP_CONTEXTS = 10

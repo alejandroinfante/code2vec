@@ -10,27 +10,20 @@ import sys
 from argparse import ArgumentParser
 from subprocess import Popen, PIPE, STDOUT, call
 
+DB_PATH = ""
+DATASET_ID = ""
+CPU_CORES = ""
 PHARO_IMAGE = ""
-PHARO_VM = '/data/ainfante/code2vec/PharoExtractor/pharo64-linux-stable/bin/pharo'
-# PHARO_VM = '/Volumes/TOURO/preprocess64/code2vec/PharoExtractor/Pharo.app/Contents/MacOS/Pharo'
-
-def get_immediate_subdirectories(a_dir):
-    return [(os.path.join(a_dir, name)) for name in os.listdir(a_dir)
-            if os.path.isdir(os.path.join(a_dir, name))]
+# PHARO_VM = '/data/ainfante/code2vec/PharoExtractor/pharo64-linux-stable/bin/pharo'
+PHARO_VM = 'pharo64'
 
 TMP_DIR = ""
 
-def ParallelExtractDir(dir):
-    ExtractFeaturesForDir(dir, "")
-
-
-def ExtractFeaturesForDir(dir, prefix):
-    pharoDir = dir
-    command = [PHARO_VM, '--headless', PHARO_IMAGE, 'extractDir', pharoDir ]
-    # command = ['pharo64', '--headless', args.pharoimage, 'extractDir', pharoDir ]
+def extractPathsFromDB(processId):
+    command = [PHARO_VM, '--headless', PHARO_IMAGE, 'extractFromDB', DB_PATH, DATASET_ID, str(CPU_CORES), str(processId + 1) ]
 
     kill = lambda process: process.kill()
-    outputFileName = TMP_DIR + prefix + dir.split('/')[-1]
+    outputFileName = TMP_DIR + str(processId)
     failed = False
     with open(outputFileName, 'a') as outputFile:
         sleeper = subprocess.Popen(command, stdout=outputFile, stderr=subprocess.PIPE)
@@ -48,48 +41,31 @@ def ExtractFeaturesForDir(dir, prefix):
         else:
             print(sys.stderr, 'dir: ' + str(dir) + ' was not completed in time', file=sys.stdout)
             failed = True
-            subdirs = get_immediate_subdirectories(dir)
-            for subdir in subdirs:
-                ExtractFeaturesForDir(subdir, prefix + dir.split('/')[-1] + '_')
     if failed:
         if os.path.exists(outputFileName):
             os.remove(outputFileName)
 
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument("-pharoimage", "--pharoimage", dest="pharoimage", required=True)
+    parser.add_argument("-db", "--db", dest="db", required=False)
+    parser.add_argument("-dataset", "--dataset", dest="dataset", required=False)
+    parser.add_argument("-cpus", "--cpus", dest="cpus", required=False)
+    args = parser.parse_args()
 
-def ExtractFeaturesForDirsList(args, dirs):
-    global TMP_DIR
-    global PHARO_IMAGE
     TMP_DIR = "./tmp/feature_extractor%d/" % (os.getpid())
     PHARO_IMAGE = args.pharoimage
+    DB_PATH = args.db
+    DATASET_ID = args.dataset
+    CPU_CORES = int(args.cpus)
     if os.path.exists(TMP_DIR):
         shutil.rmtree(TMP_DIR, ignore_errors=True)
     os.makedirs(TMP_DIR)
     try:
-        p = multiprocessing.Pool(8)
-        p.map(ParallelExtractDir, dirs)
-        # for dir in dirs:
-        #     ExtractFeaturesForDir(dir, '')
+        p = multiprocessing.Pool(CPU_CORES)
+        p.map(extractPathsFromDB, range(CPU_CORES))
         output_files = os.listdir(TMP_DIR)
         for f in output_files:
             os.system("cat %s/%s" % (TMP_DIR, f))
     finally:
         shutil.rmtree(TMP_DIR, ignore_errors=True)
-
-
-if __name__ == '__main__':
-    parser = ArgumentParser()
-    # parser.add_argument("-maxlen", "--max_path_length", dest="max_path_length", required=False, default=8)
-    # parser.add_argument("-maxwidth", "--max_path_width", dest="max_path_width", required=False, default=2)
-    # parser.add_argument("-threads", "--num_threads", dest="num_threads", required=False, default=64)
-    parser.add_argument("-pharoimage", "--pharoimage", dest="pharoimage", required=True)
-    parser.add_argument("-dir", "--dir", dest="dir", required=False)
-    parser.add_argument("-file", "--file", dest="file", required=False)
-    args = parser.parse_args()
-
-    if args.file is not None:
-        command = 'pharo7 ---headless ' + args.pharoimage + ' extractPaths ' + args.file
-        os.system(command)
-    elif args.dir is not None:
-        subdirs = get_immediate_subdirectories(args.dir)
-        ExtractFeaturesForDirsList(args, subdirs)
-    

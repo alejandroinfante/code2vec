@@ -1,1 +1,1 @@
-pipenv run python code2vec.py --load models/pharo_data/saved_model --server_predict 9555
+pipenv run python code2vec.py --load models/smalltalkhub/saved_model --server_predict 9555

@@ -18,16 +18,18 @@
 #   recommended to use a multi-core machine for the preprocessing 
 #   step and set this value to the number of cores.
 # PYTHON - python3 interpreter alias.
-TRAIN_DIR=/Volumes/TOURO/preprocess64/dataset/trainFuel
-VAL_DIR=/Volumes/TOURO/preprocess64/dataset/validationFuel
-TEST_DIR=/Volumes/TOURO/preprocess64/dataset/testFuel
+# TRAIN_DIR=/Volumes/TOURO/preprocess64/dataset/trainFuel
+# VAL_DIR=/Volumes/TOURO/preprocess64/dataset/validationFuel
+# TEST_DIR=/Volumes/TOURO/preprocess64/dataset/testFuel
+DB_PATH=/Volumes/TOURO/dataset/merge.db
+CPUS=4
 DATASET_NAME=smalltalkhub
 MAX_CONTEXTS=100
 WORD_VOCAB_SIZE=300000
 PATH_VOCAB_SIZE=200000
 TARGET_VOCAB_SIZE=50000
 PYTHON=python
-PHARO_IMAGE=PharoExtractor/extractor.image
+PHARO_IMAGE=PharoExtractor/work.image
 ###########################################################
 
 TRAIN_DATA_FILE=${DATASET_NAME}.train.raw.txt
@@ -38,13 +40,13 @@ mkdir -p data
 mkdir -p data/${DATASET_NAME}
 
 echo "Extracting paths from validation set..."
-${PYTHON} PharoExtractor/extract.py --dir ${VAL_DIR} --pharoimage ${PHARO_IMAGE} > ${VAL_DATA_FILE}
+${PYTHON} PharoExtractor/extract.py --db ${DB_PATH} --dataset 2 --cpus ${CPUS} --pharoimage ${PHARO_IMAGE} > ${VAL_DATA_FILE}
 echo "Finished extracting paths from validation set"
 echo "Extracting paths from test set..."
-${PYTHON} PharoExtractor/extract.py --dir ${TEST_DIR} --pharoimage ${PHARO_IMAGE} > ${TEST_DATA_FILE}
+${PYTHON} PharoExtractor/extract.py --db ${DB_PATH} --dataset 3 --cpus ${CPUS} --pharoimage ${PHARO_IMAGE} > ${TEST_DATA_FILE}
 echo "Finished extracting paths from test set"
 echo "Extracting paths from training set..."
-${PYTHON} PharoExtractor/extract.py --dir ${TRAIN_DIR} --pharoimage ${PHARO_IMAGE} > ${TRAIN_DATA_FILE}
+${PYTHON} PharoExtractor/extract.py --db ${DB_PATH} --dataset 1 --cpus ${CPUS} --pharoimage ${PHARO_IMAGE} > ${TRAIN_DATA_FILE}
 echo "Finished extracting paths from training set"
 
 TARGET_HISTOGRAM_FILE=data/${DATASET_NAME}/${DATASET_NAME}.histo.tgt.c2v

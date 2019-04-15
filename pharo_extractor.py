@@ -1,5 +1,7 @@
 import subprocess
 
+# PHARO_VM = '/data/ainfante/code2vec/PharoExtractor/pharo64-linux-stable/bin/pharo'
+PHARO_VM = '/Volumes/TOURO/preprocess64/code2vec/PharoExtractor/Pharo.app/Contents/MacOS/Pharo'
 
 class Extractor:
     def __init__(self, config, pharo_image_path, max_path_length, max_path_width):
@@ -9,7 +11,7 @@ class Extractor:
         self.pharo_image_path = pharo_image_path
 
     def extract_paths(self, path):
-        command = ['pharo7', '--headless', self.pharo_image_path, 'extractPaths', path ]
+        command = [PHARO_VM, '--headless', self.pharo_image_path, 'extractPaths', path ]
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = process.communicate()
         output = out.decode().splitlines()
