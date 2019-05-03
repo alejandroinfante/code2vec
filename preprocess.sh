@@ -18,34 +18,33 @@
 #   recommended to use a multi-core machine for the preprocessing 
 #   step and set this value to the number of cores.
 # PYTHON - python3 interpreter alias.
-TRAIN_DIR=my_train_dir
-VAL_DIR=my_val_dir
-TEST_DIR=my_test_dir
-DATASET_NAME=my_dataset
-MAX_CONTEXTS=200
-WORD_VOCAB_SIZE=1301136
-PATH_VOCAB_SIZE=911417
-TARGET_VOCAB_SIZE=261245
-NUM_THREADS=64
-PYTHON=python3
+DB_PATH=dataset.db
+CPUS=16
+DATASET_NAME=sqlite
+MAX_CONTEXTS=100
+WORD_VOCAB_SIZE=300000
+PATH_VOCAB_SIZE=200000
+TARGET_VOCAB_SIZE=50000
+PYTHON=python
+PHARO_IMAGE=PharoExtractor/work.image
+PHARO_VM=PharoExtractor/pharo
 ###########################################################
 
 TRAIN_DATA_FILE=${DATASET_NAME}.train.raw.txt
 VAL_DATA_FILE=${DATASET_NAME}.val.raw.txt
 TEST_DATA_FILE=${DATASET_NAME}.test.raw.txt
-EXTRACTOR_JAR=JavaExtractor/JPredict/target/JavaExtractor-0.0.1-SNAPSHOT.jar
 
 mkdir -p data
 mkdir -p data/${DATASET_NAME}
 
 echo "Extracting paths from validation set..."
-${PYTHON} JavaExtractor/extract.py --dir ${VAL_DIR} --max_path_length 8 --max_path_width 2 --num_threads ${NUM_THREADS} --jar ${EXTRACTOR_JAR} > ${VAL_DATA_FILE}
+./extractPaths.sh $DB_PATH 2 ${VAL_DATA_FILE} $CPUS
 echo "Finished extracting paths from validation set"
 echo "Extracting paths from test set..."
-${PYTHON} JavaExtractor/extract.py --dir ${TEST_DIR} --max_path_length 8 --max_path_width 2 --num_threads ${NUM_THREADS} --jar ${EXTRACTOR_JAR} > ${TEST_DATA_FILE}
+./extractPaths.sh $DB_PATH 3 ${TEST_DATA_FILE} $CPUS
 echo "Finished extracting paths from test set"
 echo "Extracting paths from training set..."
-${PYTHON} JavaExtractor/extract.py --dir ${TRAIN_DIR} --max_path_length 8 --max_path_width 2 --num_threads ${NUM_THREADS} --jar ${EXTRACTOR_JAR} > ${TRAIN_DATA_FILE}
+./extractPaths.sh $DB_PATH 1 ${TRAIN_DATA_FILE} $CPUS
 echo "Finished extracting paths from training set"
 
 TARGET_HISTOGRAM_FILE=data/${DATASET_NAME}/${DATASET_NAME}.histo.tgt.c2v
