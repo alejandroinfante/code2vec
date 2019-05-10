@@ -5,8 +5,8 @@
 # test_data: by default, points to the validation set, since this is the set that
 #   will be evaluated after each training iteration. If you wish to test
 #   on the final (held-out) test set, change 'val' to 'test'.
-type=pharo_data
-dataset_name=pharo_data
+type=sqlite
+dataset_name=sqlite
 data_dir=data/${dataset_name}
 data=${data_dir}/${dataset_name}
 test_data=${data_dir}/${dataset_name}.val.c2v
@@ -14,4 +14,4 @@ model_dir=models/${type}
 
 mkdir -p models/${model_dir}
 set -e
-python -u code2vec.py --data ${data} --test ${test_data} --save ${model_dir}/saved_model > log.txt
+python -u code2vec.py --data ${data} --test ${test_data} --save ${model_dir}/saved_model -o train.res > train.log 2> train.error

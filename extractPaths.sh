@@ -13,12 +13,7 @@ done
 
 # wait for all pids
 for pid in ${pids[*]}; do
-    P_STATUS=wait $pid
-    if [ $P_STATUS == "0" ];
-        then
-        else
-        echo "Error on process $pid"
-        fi
+    wait $pid || echo "Error on process $pid"
 done
 
 rm -f $3

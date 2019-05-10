@@ -28,6 +28,8 @@ if __name__ == '__main__':
     parser.add_argument('--release', action='store_true',
                         help='if specified and loading a trained model, release the loaded model for a lower model '
                              'size.')
+    parser.add_argument("-o", "--output", dest="output_file",
+                        help="path to save file", metavar="FILE", required=False)
     parser.add_argument('--predict', action='store_true')
     parser.add_argument('--server_predict', dest='port')
     args = parser.parse_args()

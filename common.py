@@ -23,11 +23,13 @@ class Config:
         config.EMBEDDINGS_SIZE = 75
         config.MAX_TO_KEEP = 20
         # Automatically filled, do not edit:
-        config.TRAIN_PATH = args.data_path
-        config.TEST_PATH = args.test_path
-        config.SAVE_PATH = args.save_path
-        config.LOAD_PATH = args.load_path
-        config.RELEASE = args.release
+        args_dict = vars(args)
+        config.TRAIN_PATH = args_dict.get('data_path')
+        config.TEST_PATH = args_dict.get('test_path')
+        config.SAVE_PATH = args_dict.get('save_path')
+        config.LOAD_PATH = args_dict.get('load_path')
+        config.RELEASE = args_dict.get('release')
+        config.OUTPUT_FILE = args_dict.get('output_file')
         config.DROPOUT = 0.75
         return config
 
@@ -50,6 +52,7 @@ class Config:
         self.LOAD_PATH = ''
         self.MAX_TO_KEEP = 0
         self.RELEASE = False
+        self.OUTPUT_FILE = 'eval.res'
 
 
 class common:

@@ -30,7 +30,7 @@ class PredictorServer:
     
     @app.route("/predict", methods=["POST"])
     def predict_route():
-        if request.content_length > 100000:
+        if request.content_length > 10000000:
             abort(400)
         fd, path = tempfile.mkstemp()
         try:

@@ -18,7 +18,7 @@
 #   recommended to use a multi-core machine for the preprocessing 
 #   step and set this value to the number of cores.
 # PYTHON - python3 interpreter alias.
-DB_PATH=dataset.db
+DB_PATH=example.db
 CPUS=16
 DATASET_NAME=sqlite
 MAX_CONTEXTS=100

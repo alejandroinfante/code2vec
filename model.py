@@ -185,6 +185,11 @@ class Model:
         print("Evaluation time: %sH:%sM:%sS" % ((elapsed // 60 // 60), (elapsed // 60) % 60, elapsed % 60))
         del self.eval_data_lines
         self.eval_data_lines = None
+        with open(self.config.OUTPUT_FILE, 'a+') as eval_out:
+            eval_out.write("%s  %s  %s" % (precision, recall, f1))
+            for topk_val in num_correct_predictions / total_predictions:
+                eval_out.write("  %s" % (topk_val,))
+            eval_out.write("\n")
         return num_correct_predictions / total_predictions, precision, recall, f1
 
     def update_per_subtoken_statistics(self, results, true_positive, false_positive, false_negative):
@@ -344,6 +349,41 @@ class Model:
 
         return top_words, top_scores, original_words, attention_weights, source_string, path_string, path_target_string
 
+    def predict_dataset(self):
+        if self.predict_queue is None:
+            self.predict_queue = PathContextReader.PathContextReader(word_to_index=self.word_to_index,
+                                                                     path_to_index=self.path_to_index,
+                                                                     target_word_to_index=self.target_word_to_index,
+                                                                     config=self.config, is_evaluating=True)
+            self.predict_placeholder = self.predict_queue.get_input_placeholder()
+            self.predict_top_words_op, self.predict_top_values_op, self.predict_original_names_op, \
+            self.attention_weights_op, self.predict_source_string, self.predict_path_string, self.predict_path_target_string = \
+                self.build_test_graph(self.predict_queue.get_filtered_batches(), normalize_scores=True)
+
+            self.initialize_session_variables(self.sess)
+            self.saver = tf.train.Saver()
+            self.load_model(self.sess)
+        self.predict_data_lines = common.load_file_lines(self.config.TEST_PATH)
+        with open(self.config.OUTPUT_FILE, 'a+') as output_file:
+            for batch in common.split_to_batches(predict_data_lines, 1):
+                top_words, top_scores, original_names, attention_weights, source_strings, path_strings, target_strings = self.sess.run(
+                    [self.predict_top_words_op, self.predict_top_values_op, self.predict_original_names_op,
+                    self.attention_weights_op, self.predict_source_string, self.predict_path_string,
+                    self.predict_path_target_string],
+                    feed_dict={self.predict_placeholder: batch}) 
+                top_words, original_names = common.binary_to_string_matrix(top_words), common.binary_to_string_matrix(original_names)
+                original_names = [w for l in original_names for w in l]
+                attention_per_path = self.get_attention_per_path(source_strings, path_strings, target_strings,
+                                                             attention_weights)
+                for res_index in range(len(top_words)):
+                    res = common.parse_results((original_names[res_index], top_words[res_index], top_scores[res_index], attention_per_path), hash_to_string_dict, topk=SHOW_TOP_CONTEXTS)[0]
+                    eval_out.write("%s" % (original_names[res_index],))
+                    for pred in res['predictions']:
+                        eval_out.write(";%s" % (pred,))
+                    # for pred in res['predictions']:
+                    #     eval_out.write(";%s" % (pred,))
+                    eval_out.write("\n")
+    
     def predict(self, predict_data_lines):
         if self.predict_queue is None:
             self.predict_queue = PathContextReader.PathContextReader(word_to_index=self.word_to_index,
