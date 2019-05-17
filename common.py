@@ -52,8 +52,7 @@ class Config:
         self.LOAD_PATH = ''
         self.MAX_TO_KEEP = 0
         self.RELEASE = False
-        self.OUTPUT_FILE = 'eval.res'
-
+        self.OUTPUT_FILE = 'output'
 
 class common:
     noSuchWord = "NoSuchWord"

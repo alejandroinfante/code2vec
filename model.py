@@ -5,6 +5,7 @@ import numpy as np
 import time
 import pickle
 from common import common, VocabType
+from c2v_logger import Logger
 
 
 class Model:
@@ -14,6 +15,8 @@ class Model:
     def __init__(self, config):
         self.config = config
         self.sess = tf.Session()
+
+        self.logger = Logger('logger',self)
 
         self.eval_data_lines = None
         self.eval_queue = None
@@ -61,7 +64,7 @@ class Model:
     def close_session(self):
         self.sess.close()
 
-    def train(self):
+    def old_train(self):
         print('Starting training')
         start_time = time.time()
 
@@ -115,6 +118,48 @@ class Model:
         elapsed = int(time.time() - start_time)
         print("Training time: %sH:%sM:%sS\n" % ((elapsed // 60 // 60), (elapsed // 60) % 60, elapsed % 60))
 
+    def train(self):
+        with self.logger:
+            print('Starting training')
+            start_time = time.time()
+            multi_batch_start_time = time.time()
+            num_batches_per_epoch = max(int(self.config.NUM_EXAMPLES / self.config.BATCH_SIZE), 1)
+            num_batches_to_evaluate = num_batches_per_epoch * self.config.SAVE_EVERY_EPOCHS 
+
+            self.queue_thread = PathContextReader.PathContextReader(word_to_index=self.word_to_index,
+                                                                    path_to_index=self.path_to_index,
+                                                                    target_word_to_index=self.target_word_to_index,
+                                                                    config=self.config)
+            optimizer, train_loss = self.build_training_graph(self.queue_thread.input_tensors())
+            self.saver = tf.train.Saver(max_to_keep=self.config.MAX_TO_KEEP)
+
+            self.initialize_session_variables(self.sess)
+            print('Initalized variables')
+            if self.config.LOAD_PATH:
+                self.load_model(self.sess)
+            with self.queue_thread.start(self.sess):
+                time.sleep(1)
+                print('Started reader...')
+                try:
+                    while True:
+                        _, batch_loss = self.sess.run([optimizer, train_loss])
+                        self.logger.increment_batch()
+                        self.logger.log_loss(batch_loss)
+                        if self.logger.eval_and_log():
+                            epoch_num = int((self.logger.current_batch / num_batches_to_evaluate) * self.config.SAVE_EVERY_EPOCHS)
+                            save_target = self.config.SAVE_PATH + '_iter' + str(epoch_num)
+                            self.save_model(self.sess, save_target)
+                            print('Saved after %d epochs in: %s' % (epoch_num, save_target))
+                except tf.errors.OutOfRangeError:
+                    print('Done training')
+
+            if self.config.SAVE_PATH:
+                self.save_model(self.sess, self.config.SAVE_PATH)
+                print('Model saved in file: %s' % self.config.SAVE_PATH)
+
+            elapsed = int(time.time() - start_time)
+            print("Training time: %sH:%sM:%sS\n" % ((elapsed // 60 // 60), (elapsed // 60) % 60, elapsed % 60))
+
     def trace(self, sum_loss, batch_num, multi_batch_start_time):
         multi_batch_elapsed = time.time() - multi_batch_start_time
         avg_loss = sum_loss / (self.num_batches_to_log * self.config.BATCH_SIZE)
@@ -122,7 +167,8 @@ class Model:
                                                                               self.config.BATCH_SIZE * self.num_batches_to_log / (
                                                                                   multi_batch_elapsed if multi_batch_elapsed > 0 else 1)))
 
-    def evaluate(self):
+    def evaluate(self, eval_data=None):
+        self.eval_data_lines = eval_data
         eval_start_time = time.time()
         if self.eval_queue is None:
             self.eval_queue = PathContextReader.PathContextReader(word_to_index=self.word_to_index,
@@ -365,7 +411,9 @@ class Model:
             self.load_model(self.sess)
         self.predict_data_lines = common.load_file_lines(self.config.TEST_PATH)
         with open(self.config.OUTPUT_FILE, 'a+') as output_file:
-            for batch in common.split_to_batches(predict_data_lines, 1):
+            batch_num = 0
+            for batch in common.split_to_batches(self.predict_data_lines, self.config.TEST_BATCH_SIZE):
+                batch_num += 1
                 top_words, top_scores, original_names, attention_weights, source_strings, path_strings, target_strings = self.sess.run(
                     [self.predict_top_words_op, self.predict_top_values_op, self.predict_original_names_op,
                     self.attention_weights_op, self.predict_source_string, self.predict_path_string,
@@ -373,16 +421,11 @@ class Model:
                     feed_dict={self.predict_placeholder: batch}) 
                 top_words, original_names = common.binary_to_string_matrix(top_words), common.binary_to_string_matrix(original_names)
                 original_names = [w for l in original_names for w in l]
-                attention_per_path = self.get_attention_per_path(source_strings, path_strings, target_strings,
-                                                             attention_weights)
-                for res_index in range(len(top_words)):
-                    res = common.parse_results((original_names[res_index], top_words[res_index], top_scores[res_index], attention_per_path), hash_to_string_dict, topk=SHOW_TOP_CONTEXTS)[0]
-                    eval_out.write("%s" % (original_names[res_index],))
-                    for pred in res['predictions']:
-                        eval_out.write(";%s" % (pred,))
-                    # for pred in res['predictions']:
-                    #     eval_out.write(";%s" % (pred,))
-                    eval_out.write("\n")
+                for res_index in range(len(original_names)):
+                    output_file.write("%s;" % (original_names[res_index],))
+                    output_file.write(";".join(top_words[res_index]))
+                    output_file.write("\n")
+                print("Finished batch %s with %s elements" % (batch_num, len(original_names)))
     
     def predict(self, predict_data_lines):
         if self.predict_queue is None:
